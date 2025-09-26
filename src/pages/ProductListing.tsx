@@ -1,0 +1,250 @@
+import { useState } from "react";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Star, Heart, ShoppingCart } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const categories = [
+  "All Categories",
+  "Smartphones",
+  "Laptops",
+  "Audio",
+  "Cameras",
+  "Gaming",
+  "Smart Home",
+  "Accessories"
+];
+
+const products = [
+  {
+    id: 1,
+    name: "iPhone 15 Pro",
+    price: 999,
+    originalPrice: 1099,
+    image: "/placeholder.svg",
+    rating: 4.8,
+    reviews: 2847,
+    category: "Smartphones",
+    discount: 9,
+    inStock: true
+  },
+  {
+    id: 2,
+    name: "MacBook Pro 14\"",
+    price: 1999,
+    originalPrice: 2199,
+    image: "/placeholder.svg",
+    rating: 4.9,
+    reviews: 1253,
+    category: "Laptops",
+    discount: 9,
+    inStock: true
+  },
+  {
+    id: 3,
+    name: "AirPods Pro",
+    price: 249,
+    originalPrice: 279,
+    image: "/placeholder.svg",
+    rating: 4.7,
+    reviews: 3421,
+    category: "Audio",
+    discount: 11,
+    inStock: true
+  },
+  {
+    id: 4,
+    name: "Sony Alpha A7 IV",
+    price: 2498,
+    originalPrice: 2698,
+    image: "/placeholder.svg",
+    rating: 4.8,
+    reviews: 892,
+    category: "Cameras",
+    discount: 7,
+    inStock: true
+  },
+  {
+    id: 5,
+    name: "PlayStation 5",
+    price: 499,
+    originalPrice: 499,
+    image: "/placeholder.svg",
+    rating: 4.9,
+    reviews: 5624,
+    category: "Gaming",
+    discount: 0,
+    inStock: false
+  },
+  {
+    id: 6,
+    name: "Samsung Galaxy S24",
+    price: 799,
+    originalPrice: 899,
+    image: "/placeholder.svg",
+    rating: 4.6,
+    reviews: 1876,
+    category: "Smartphones",
+    discount: 11,
+    inStock: true
+  }
+];
+
+const ProductListing = () => {
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
+  const [sortBy, setSortBy] = useState("featured");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = selectedCategory === "All Categories" || product.category === selectedCategory;
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header cartItemsCount={3} />
+      
+      <main className="container mx-auto px-4 py-8">
+        {/* Breadcrumb */}
+        <nav className="text-sm text-muted-foreground mb-6">
+          <Link to="/" className="hover:text-primary">Home</Link>
+          <span className="mx-2">/</span>
+          <span>Products</span>
+        </nav>
+
+        {/* Search and Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="md:col-span-2">
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger>
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger>
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="featured">Featured</SelectItem>
+              <SelectItem value="price-low">Price: Low to High</SelectItem>
+              <SelectItem value="price-high">Price: High to Low</SelectItem>
+              <SelectItem value="rating">Highest Rated</SelectItem>
+              <SelectItem value="newest">Newest First</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Results count */}
+        <div className="flex justify-between items-center mb-6">
+          <p className="text-muted-foreground">
+            Showing {filteredProducts.length} results
+          </p>
+        </div>
+
+        {/* Product Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredProducts.map((product) => (
+            <Card key={product.id} className="group hover:shadow-product transition-all duration-300">
+              <CardContent className="p-0">
+                <div className="relative">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-48 object-cover rounded-t-lg"
+                  />
+                  {product.discount > 0 && (
+                    <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground">
+                      -{product.discount}%
+                    </Badge>
+                  )}
+                  {!product.inStock && (
+                    <Badge className="absolute top-2 right-2 bg-muted text-muted-foreground">
+                      Out of Stock
+                    </Badge>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="p-4">
+                  <Link to={`/product/${product.id}`}>
+                    <h3 className="font-semibold text-sm mb-2 hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+                  </Link>
+                  
+                  <div className="flex items-center gap-1 mb-2">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3 w-3 ${
+                            i < Math.floor(product.rating)
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {product.rating} ({product.reviews})
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg font-bold text-brand-primary">
+                      ${product.price}
+                    </span>
+                    {product.originalPrice > product.price && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        ${product.originalPrice}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <Button 
+                    className="w-full" 
+                    disabled={!product.inStock}
+                    size="sm"
+                  >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    {product.inStock ? "Add to Cart" : "Out of Stock"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default ProductListing;
