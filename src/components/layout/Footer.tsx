@@ -1,6 +1,7 @@
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
 export function Footer() {
@@ -18,18 +19,26 @@ export function Footer() {
               Your trusted e-commerce platform for all your shopping needs. Quality products, fast delivery, and excellent customer service.
             </p>
             <div className="flex gap-3">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Facebook className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Twitter className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Instagram className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Youtube className="h-4 w-4" />
-              </Button>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Facebook className="h-4 w-4" />
+                </Button>
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Twitter className="h-4 w-4" />
+                </Button>
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Instagram className="h-4 w-4" />
+                </Button>
+              </a>
+              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Youtube className="h-4 w-4" />
+                </Button>
+              </a>
             </div>
           </div>
 
@@ -37,11 +46,11 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Careers</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Press</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Blog</a></li>
+              <li><Link to="/about" className="hover:text-foreground transition-colors">About Us</Link></li>
+              <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
+              <li><Link to="/products" className="hover:text-foreground transition-colors">Shop</Link></li>
+              <li><Link to="/orders" className="hover:text-foreground transition-colors">My Orders</Link></li>
+              <li><Link to="/cart" className="hover:text-foreground transition-colors">Cart</Link></li>
             </ul>
           </div>
 
@@ -49,11 +58,10 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Customer Service</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Returns</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Shipping Info</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Track Order</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Size Guide</a></li>
+              <li><Link to="/help-center" className="hover:text-foreground transition-colors">Help Center</Link></li>
+              <li><Link to="/returns" className="hover:text-foreground transition-colors">Returns</Link></li>
+              <li><Link to="/shipping-info" className="hover:text-foreground transition-colors">Shipping Info</Link></li>
+              <li><Link to="/track-order" className="hover:text-foreground transition-colors">Track Order</Link></li>
             </ul>
           </div>
 
@@ -94,9 +102,9 @@ export function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
             <p>&copy; 2024 EasyBuySell. All rights reserved.</p>
             <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-foreground transition-colors">Cookie Policy</a>
+              <Link to="/privacy-policy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+              <Link to="/terms-of-service" className="hover:text-foreground transition-colors">Terms of Service</Link>
+              <Link to="/cookies-policy" className="hover:text-foreground transition-colors">Cookie Policy</Link>
             </div>
           </div>
         </div>

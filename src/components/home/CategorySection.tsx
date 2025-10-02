@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Laptop, Shirt, Home, Book, Dumbbell, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const categories = [
   {
@@ -67,27 +68,31 @@ export function CategorySection() {
           {categories.map((category) => {
             const Icon = category.icon;
             return (
-              <Card 
-                key={category.id} 
-                className="group cursor-pointer hover:shadow-product transition-all duration-300 overflow-hidden"
+              <Link 
+                key={category.id}
+                to={`/products?category=${encodeURIComponent(category.name)}`}
               >
-                <CardContent className="p-0">
-                  <div className={`h-32 bg-gradient-to-br ${category.gradient} relative overflow-hidden`}>
-                    <div className="absolute inset-0 bg-black/20" />
-                    <div className="relative h-full flex items-center justify-center">
-                      <Icon className="h-12 w-12 text-white" />
+                <Card 
+                  className="group cursor-pointer hover:shadow-product transition-all duration-300 overflow-hidden"
+                >
+                  <CardContent className="p-0">
+                    <div className={`h-32 bg-gradient-to-br ${category.gradient} relative overflow-hidden`}>
+                      <div className="absolute inset-0 bg-black/20" />
+                      <div className="relative h-full flex items-center justify-center">
+                        <Icon className="h-12 w-12 text-white" />
+                      </div>
+                      <div className="absolute top-3 right-3 w-16 h-16 bg-white/10 rounded-full blur-xl" />
+                      <div className="absolute bottom-3 left-3 w-12 h-12 bg-white/20 rounded-full blur-lg" />
                     </div>
-                    <div className="absolute top-3 right-3 w-16 h-16 bg-white/10 rounded-full blur-xl" />
-                    <div className="absolute bottom-3 left-3 w-12 h-12 bg-white/20 rounded-full blur-lg" />
-                  </div>
-                  
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
-                    <p className="text-muted-foreground mb-3">{category.description}</p>
-                    <p className="text-sm font-medium text-brand-primary">{category.itemCount}</p>
-                  </div>
-                </CardContent>
-              </Card>
+                    
+                    <div className="p-6">
+                      <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
+                      <p className="text-muted-foreground mb-3">{category.description}</p>
+                      <p className="text-sm font-medium text-brand-primary">{category.itemCount}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>

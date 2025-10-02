@@ -2,14 +2,24 @@ import { Search, ShoppingCart, User, Menu, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import { useState } from "react";
 
 interface HeaderProps {
   cartItemsCount?: number;
 }
 
 export function Header({ cartItemsCount = 0 }: HeaderProps) {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-surface-elevated shadow-elegant">
       <div className="container mx-auto px-4 py-3">
@@ -26,15 +36,17 @@ export function Header({ cartItemsCount = 0 }: HeaderProps) {
           </div>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-2xl mx-4">
+          <form onSubmit={handleSearch} className="flex-1 max-w-2xl mx-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search for products, brands and more..."
                 className="pl-10 bg-surface-base border-border"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-          </div>
+          </form>
 
           {/* Navigation Icons */}
           <div className="flex items-center gap-2">
@@ -68,12 +80,12 @@ export function Header({ cartItemsCount = 0 }: HeaderProps) {
         <div className="hidden md:flex items-center gap-6 mt-3 pt-3 border-t">
           <span className="text-sm font-medium">Categories:</span>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <button className="hover:text-foreground transition-colors">Electronics</button>
-            <button className="hover:text-foreground transition-colors">Fashion</button>
-            <button className="hover:text-foreground transition-colors">Home & Garden</button>
-            <button className="hover:text-foreground transition-colors">Books</button>
-            <button className="hover:text-foreground transition-colors">Sports</button>
-            <button className="hover:text-foreground transition-colors">Beauty</button>
+            <Link to="/products?category=Electronics" className="hover:text-foreground transition-colors">Electronics</Link>
+            <Link to="/products?category=Fashion" className="hover:text-foreground transition-colors">Fashion</Link>
+            <Link to="/products?category=Home & Garden" className="hover:text-foreground transition-colors">Home & Garden</Link>
+            <Link to="/products?category=Books" className="hover:text-foreground transition-colors">Books</Link>
+            <Link to="/products?category=Sports" className="hover:text-foreground transition-colors">Sports</Link>
+            <Link to="/products?category=Beauty" className="hover:text-foreground transition-colors">Beauty</Link>
           </div>
         </div>
       </div>

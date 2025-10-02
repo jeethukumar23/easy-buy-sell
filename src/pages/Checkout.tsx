@@ -14,6 +14,8 @@ import { Link } from "react-router-dom";
 const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [shippingMethod, setShippingMethod] = useState("standard");
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
 
   // Mock cart data
   const cartItems = [
@@ -24,7 +26,17 @@ const Checkout = () => {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const shipping = shippingMethod === "express" ? 15 : 5;
   const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const total = subtotal - discount + shipping + tax;
+
+  const applyCoupon = () => {
+    if (couponCode.toUpperCase() === "SAVE10") {
+      setDiscount(subtotal * 0.1);
+    } else if (couponCode.toUpperCase() === "SAVE20") {
+      setDiscount(subtotal * 0.2);
+    } else {
+      setDiscount(0);
+    }
+  };
 
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +176,10 @@ const Checkout = () => {
                       <RadioGroupItem value="paypal" id="paypal" />
                       <Label htmlFor="paypal">PayPal</Label>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="cod" id="cod" />
+                      <Label htmlFor="cod">Cash on Delivery</Label>
+                    </div>
                   </RadioGroup>
                   
                   {paymentMethod === "card" && (
@@ -221,12 +237,40 @@ const Checkout = () => {
                 
                 <Separator />
                 
+                {/* Coupon Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="coupon">Apply Coupon Code</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="coupon"
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                    />
+                    <Button type="button" variant="outline" onClick={applyCoupon}>
+                      Apply
+                    </Button>
+                  </div>
+                  {discount > 0 && (
+                    <p className="text-sm text-green-600">Coupon applied! ${discount.toFixed(2)} discount</p>
+                  )}
+                </div>
+
+                <Separator />
+                
                 {/* Pricing Breakdown */}
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
+                  
+                  {discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount</span>
+                      <span>-${discount.toFixed(2)}</span>
+                    </div>
+                  )}
                   
                   <div className="flex justify-between">
                     <span>Shipping</span>
