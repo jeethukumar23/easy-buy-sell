@@ -1,8 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import ProductListing from "./pages/ProductListing";
 import ProductDetails from "./pages/ProductDetails";
@@ -22,38 +18,27 @@ import TermsOfService from "./pages/TermsOfService";
 import CookiesPolicy from "./pages/CookiesPolicy";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/products" element={<ProductListing />} />
-          <Route path="/product/:id" element={<ProductDetails />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/orders" element={<OrderHistory />} />
-          <Route path="/help-center" element={<HelpCenter />} />
-          <Route path="/returns" element={<Returns />} />
-          <Route path="/shipping-info" element={<ShippingInfo />} />
-          <Route path="/track-order" element={<TrackOrder />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-of-service" element={<TermsOfService />} />
-          <Route path="/cookies-policy" element={<CookiesPolicy />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <Routes>
+    <Route path="/" element={<Index />} />
+    <Route path="/products" element={<ProductListing />} />
+    <Route path="/product/:id" element={<ProductDetails />} />
+    <Route path="/cart" element={<Cart />} />
+    <Route path="/login" element={<Login />} />
+    <Route path="/signup" element={<Signup />} />
+    <Route path="/checkout" element={<Checkout />} />
+    <Route path="/order-history" element={<OrderHistory />} />
+    <Route path="/help-center" element={<HelpCenter />} />
+    <Route path="/returns" element={<Returns />} />
+    <Route path="/shipping-info" element={<ShippingInfo />} />
+    <Route path="/track-order" element={<TrackOrder />} />
+    <Route path="/about" element={<About />} />
+    <Route path="/contact" element={<Contact />} />
+    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+    <Route path="/terms-of-service" element={<TermsOfService />} />
+    <Route path="/cookies-policy" element={<CookiesPolicy />} />
+    <Route path="*" element={<NotFound />} />
+  </Routes>
 );
 
 export default App;

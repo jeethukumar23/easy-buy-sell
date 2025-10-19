@@ -14,7 +14,136 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cart: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          selected_color: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity?: number
+          selected_color?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          selected_color?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          brand: string | null
+          category: string
+          colors: string[] | null
+          created_at: string
+          description: string | null
+          discount: number | null
+          id: string
+          image_url: string
+          images: string[] | null
+          in_stock: boolean | null
+          name: string
+          original_price: number | null
+          price: number
+          rating: number | null
+          reviews_count: number | null
+          stock: number | null
+          subcategory: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          category: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          discount?: number | null
+          id?: string
+          image_url: string
+          images?: string[] | null
+          in_stock?: boolean | null
+          name: string
+          original_price?: number | null
+          price: number
+          rating?: number | null
+          reviews_count?: number | null
+          stock?: number | null
+          subcategory?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          discount?: number | null
+          id?: string
+          image_url?: string
+          images?: string[] | null
+          in_stock?: boolean | null
+          name?: string
+          original_price?: number | null
+          price?: number
+          rating?: number | null
+          reviews_count?: number | null
+          stock?: number | null
+          subcategory?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      wishlist: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

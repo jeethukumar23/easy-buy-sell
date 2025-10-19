@@ -1,10 +1,19 @@
-import { Search, ShoppingCart, User, Menu, Heart } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, Heart, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import logo from "@/assets/logo.png";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useWishlist } from "@/hooks/useWishlist";
 
 interface HeaderProps {
   cartItemsCount?: number;
@@ -13,12 +22,19 @@ interface HeaderProps {
 export function Header({ cartItemsCount = 0 }: HeaderProps) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const { user, signOut } = useAuth();
+  const { wishlistCount } = useWishlist();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-surface-elevated shadow-elegant">
@@ -50,8 +66,16 @@ export function Header({ cartItemsCount = 0 }: HeaderProps) {
 
           {/* Navigation Icons */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
+            <Button variant="ghost" size="icon" className="hidden md:flex relative">
               <Heart className="h-5 w-5" />
+              {wishlistCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                >
+                  {wishlistCount}
+                </Badge>
+              )}
             </Button>
             
             <Link to="/cart">
@@ -68,11 +92,34 @@ export function Header({ cartItemsCount = 0 }: HeaderProps) {
               </Button>
             </Link>
             
-            <Link to="/login">
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem className="font-medium">
+                    {user.email}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/order-history">Order History</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/login">
+                <Button variant="ghost" size="icon">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 

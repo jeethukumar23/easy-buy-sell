@@ -8,98 +8,47 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Star, Heart, ShoppingCart } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useWishlist } from "@/hooks/useWishlist";
+import { toast } from "sonner";
 
 const categories = [
   "All Categories",
-  "Smartphones",
-  "Laptops",
-  "Audio",
-  "Cameras",
-  "Gaming",
-  "Smart Home",
-  "Accessories"
+  "Electronics",
+  "Fashion",
+  "Books",
+  "Beauty",
+  "Home & Garden",
+  "Sports"
 ];
 
-const products = [
-  {
-    id: 1,
-    name: "iPhone 15 Pro",
-    price: 999,
-    originalPrice: 1099,
-    image: "/placeholder.svg",
-    rating: 4.8,
-    reviews: 2847,
-    category: "Smartphones",
-    discount: 9,
-    inStock: true
-  },
-  {
-    id: 2,
-    name: "MacBook Pro 14\"",
-    price: 1999,
-    originalPrice: 2199,
-    image: "/placeholder.svg",
-    rating: 4.9,
-    reviews: 1253,
-    category: "Laptops",
-    discount: 9,
-    inStock: true
-  },
-  {
-    id: 3,
-    name: "AirPods Pro",
-    price: 249,
-    originalPrice: 279,
-    image: "/placeholder.svg",
-    rating: 4.7,
-    reviews: 3421,
-    category: "Audio",
-    discount: 11,
-    inStock: true
-  },
-  {
-    id: 4,
-    name: "Sony Alpha A7 IV",
-    price: 2498,
-    originalPrice: 2698,
-    image: "/placeholder.svg",
-    rating: 4.8,
-    reviews: 892,
-    category: "Cameras",
-    discount: 7,
-    inStock: true
-  },
-  {
-    id: 5,
-    name: "PlayStation 5",
-    price: 499,
-    originalPrice: 499,
-    image: "/placeholder.svg",
-    rating: 4.9,
-    reviews: 5624,
-    category: "Gaming",
-    discount: 0,
-    inStock: false
-  },
-  {
-    id: 6,
-    name: "Samsung Galaxy S24",
-    price: 799,
-    originalPrice: 899,
-    image: "/placeholder.svg",
-    rating: 4.6,
-    reviews: 1876,
-    category: "Smartphones",
-    discount: 11,
-    inStock: true
-  }
-];
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  original_price: number | null;
+  category: string;
+  subcategory: string | null;
+  brand: string | null;
+  image_url: string;
+  images: string[] | null;
+  colors: string[] | null;
+  rating: number;
+  reviews_count: number;
+  stock: number;
+  in_stock: boolean;
+  discount: number;
+}
 
 const ProductListing = () => {
   const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [sortBy, setSortBy] = useState("featured");
   const [searchTerm, setSearchTerm] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   useEffect(() => {
     const categoryParam = searchParams.get("category");
@@ -113,15 +62,50 @@ const ProductListing = () => {
     }
   }, [searchParams]);
 
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = selectedCategory === "All Categories" || product.category === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  useEffect(() => {
+    fetchProducts();
+  }, [selectedCategory, searchTerm, sortBy]);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from('products')
+        .select('*');
+
+      if (selectedCategory !== "All Categories") {
+        query = query.eq('category', selectedCategory);
+      }
+
+      if (searchTerm) {
+        query = query.ilike('name', `%${searchTerm}%`);
+      }
+
+      if (sortBy === 'price-low') {
+        query = query.order('price', { ascending: true });
+      } else if (sortBy === 'price-high') {
+        query = query.order('price', { ascending: false });
+      } else if (sortBy === 'rating') {
+        query = query.order('rating', { ascending: false });
+      } else if (sortBy === 'newest') {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <Header cartItemsCount={3} />
+      <Header cartItemsCount={0} />
       
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
@@ -170,18 +154,18 @@ const ProductListing = () => {
         {/* Results count */}
         <div className="flex justify-between items-center mb-6">
           <p className="text-muted-foreground">
-            Showing {filteredProducts.length} results
+            {loading ? 'Loading...' : `Showing ${products.length} results`}
           </p>
         </div>
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
+          {products.map((product) => (
             <Card key={product.id} className="group hover:shadow-product transition-all duration-300">
               <CardContent className="p-0">
                 <div className="relative">
                   <img
-                    src={product.image}
+                    src={product.image_url}
                     alt={product.name}
                     className="w-full h-48 object-cover rounded-t-lg"
                   />
@@ -190,7 +174,7 @@ const ProductListing = () => {
                       -{product.discount}%
                     </Badge>
                   )}
-                  {!product.inStock && (
+                  {!product.in_stock && (
                     <Badge className="absolute top-2 right-2 bg-muted text-muted-foreground">
                       Out of Stock
                     </Badge>
@@ -198,9 +182,12 @@ const ProductListing = () => {
                   <Button
                     size="icon"
                     variant="outline"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className={`absolute top-2 right-2 transition-opacity ${
+                      isInWishlist(product.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    }`}
+                    onClick={() => toggleWishlist(product.id)}
                   >
-                    <Heart className="h-4 w-4" />
+                    <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
                   </Button>
                 </div>
                 
@@ -225,7 +212,7 @@ const ProductListing = () => {
                       ))}
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {product.rating} ({product.reviews})
+                      {product.rating} ({product.reviews_count})
                     </span>
                   </div>
                   
@@ -233,20 +220,20 @@ const ProductListing = () => {
                     <span className="text-lg font-bold text-brand-primary">
                       ${product.price}
                     </span>
-                    {product.originalPrice > product.price && (
+                    {product.original_price && product.original_price > product.price && (
                       <span className="text-sm text-muted-foreground line-through">
-                        ${product.originalPrice}
+                        ${product.original_price}
                       </span>
                     )}
                   </div>
                   
                   <Button 
                     className="w-full" 
-                    disabled={!product.inStock}
+                    disabled={!product.in_stock}
                     size="sm"
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    {product.inStock ? "Add to Cart" : "Out of Stock"}
+                    {product.in_stock ? "Add to Cart" : "Out of Stock"}
                   </Button>
                 </div>
               </CardContent>
