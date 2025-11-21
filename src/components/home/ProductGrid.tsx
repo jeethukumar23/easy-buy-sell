@@ -1,85 +1,65 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Heart, ShoppingCart } from "lucide-react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useCart } from "@/hooks/useCart";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
   name: string;
   price: number;
-  originalPrice?: number;
+  original_price: number | null;
   rating: number;
-  reviews: number;
-  image: string;
-  badge?: string;
+  reviews_count: number;
+  image_url: string;
+  discount: number;
   category: string;
+  in_stock: boolean;
 }
 
-// Mock data for demonstration
-const featuredProducts: Product[] = [
-  {
-    id: "1",
-    name: "Wireless Bluetooth Headphones",
-    price: 89.99,
-    originalPrice: 129.99,
-    rating: 4.5,
-    reviews: 234,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop&auto=format",
-    badge: "Best Seller",
-    category: "Electronics"
-  },
-  {
-    id: "2",
-    name: "Premium Cotton T-Shirt",
-    price: 24.99,
-    rating: 4.3,
-    reviews: 89,
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop&auto=format",
-    category: "Fashion"
-  },
-  {
-    id: "3",
-    name: "Smart Fitness Watch",
-    price: 199.99,
-    originalPrice: 249.99,
-    rating: 4.7,
-    reviews: 456,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop&auto=format",
-    badge: "Featured",
-    category: "Electronics"
-  },
-  {
-    id: "4",
-    name: "Ceramic Coffee Mug Set",
-    price: 39.99,
-    rating: 4.2,
-    reviews: 123,
-    image: "https://images.unsplash.com/photo-1514228742587-6b1558fcf93a?w=300&h=300&fit=crop&auto=format",
-    category: "Home & Garden"
-  },
-  {
-    id: "5",
-    name: "Gaming Mechanical Keyboard",
-    price: 149.99,
-    originalPrice: 179.99,
-    rating: 4.6,
-    reviews: 567,
-    image: "https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=300&h=300&fit=crop&auto=format",
-    badge: "New",
-    category: "Electronics"
-  },
-  {
-    id: "6",
-    name: "Leather Laptop Bag",
-    price: 79.99,
-    rating: 4.4,
-    reviews: 234,
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&h=300&fit=crop&auto=format",
-    category: "Fashion"
-  }
-];
-
 export function ProductGrid() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const { addToCart } = useCart();
+
+  useEffect(() => {
+    fetchFeaturedProducts();
+  }, []);
+
+  const fetchFeaturedProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .limit(6)
+        .order('rating', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="py-16 bg-surface-base">
+        <div className="container mx-auto px-4">
+          <div className="text-center">Loading products...</div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 bg-surface-base">
       <div className="container mx-auto px-4">
@@ -91,37 +71,49 @@ export function ProductGrid() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredProducts.map((product) => (
+          {products.map((product) => (
             <Card key={product.id} className="group hover:shadow-product transition-all duration-300 overflow-hidden">
               <CardContent className="p-0">
-                <div className="relative">
-                  <img 
-                    src={product.image} 
-                    alt={product.name}
-                    className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  
-                  {product.badge && (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute top-3 left-3"
+                <Link to={`/product/${product.id}`}>
+                  <div className="relative">
+                    <img 
+                      src={product.image_url} 
+                      alt={product.name}
+                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    
+                    {product.discount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute top-3 left-3"
+                      >
+                        -{product.discount}% OFF
+                      </Badge>
+                    )}
+                    
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`absolute top-3 right-3 bg-white/80 hover:bg-white transition-opacity ${
+                        isInWishlist(product.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                      }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleWishlist(product.id);
+                      }}
                     >
-                      {product.badge}
-                    </Badge>
-                  )}
-                  
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-3 right-3 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Heart className="h-4 w-4" />
-                  </Button>
-                </div>
+                      <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                    </Button>
+                  </div>
+                </Link>
 
                 <div className="p-4">
                   <p className="text-sm text-muted-foreground mb-1">{product.category}</p>
-                  <h3 className="font-semibold mb-2 line-clamp-2">{product.name}</h3>
+                  <Link to={`/product/${product.id}`}>
+                    <h3 className="font-semibold mb-2 line-clamp-2 hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+                  </Link>
                   
                   <div className="flex items-center gap-1 mb-3">
                     <div className="flex items-center">
@@ -137,21 +129,26 @@ export function ProductGrid() {
                       ))}
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      ({product.reviews})
+                      ({product.reviews_count})
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xl font-bold">${product.price}</span>
-                      {product.originalPrice && (
+                      {product.original_price && product.original_price > product.price && (
                         <span className="text-sm text-muted-foreground line-through">
-                          ${product.originalPrice}
+                          ${product.original_price}
                         </span>
                       )}
                     </div>
                     
-                    <Button size="sm" className="shrink-0">
+                    <Button 
+                      size="sm" 
+                      className="shrink-0"
+                      disabled={!product.in_stock}
+                      onClick={() => addToCart(product.id)}
+                    >
                       <ShoppingCart className="h-4 w-4 mr-1" />
                       Add
                     </Button>
@@ -163,9 +160,11 @@ export function ProductGrid() {
         </div>
 
         <div className="text-center mt-12">
-          <Button size="lg" variant="outline">
-            View All Products
-          </Button>
+          <Link to="/products">
+            <Button size="lg" variant="outline">
+              View All Products
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

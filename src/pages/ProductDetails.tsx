@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,65 +7,108 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw } from "lucide-react";
-import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
+import { toast } from "sonner";
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  original_price: number | null;
+  description: string | null;
+  category: string;
+  image_url: string;
+  images: string[] | null;
+  rating: number;
+  reviews_count: number;
+  in_stock: boolean;
+  stock: number;
+  discount: number;
+  colors: string[] | null;
+}
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
-  // Mock product data - in real app, fetch based on id
-  const product = {
-    id: 1,
-    name: "iPhone 15 Pro",
-    price: 999,
-    originalPrice: 1099,
-    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-    rating: 4.8,
-    reviews: 2847,
-    category: "Smartphones",
-    discount: 9,
-    inStock: true,
-    stock: 15,
-    description: "The iPhone 15 Pro features a stunning titanium design, the powerful A17 Pro chip, and an advanced camera system for capturing life in incredible detail.",
-    features: [
-      "6.1-inch Super Retina XDR display",
-      "A17 Pro chip for lightning-fast performance",
-      "Pro camera system with 3x optical zoom",
-      "Action Button for quick access to features",
-      "USB-C connector",
-      "Up to 23 hours video playback"
-    ],
-    specifications: {
-      "Display": "6.1-inch Super Retina XDR",
-      "Chip": "A17 Pro",
-      "Storage": "128GB, 256GB, 512GB, 1TB",
-      "Camera": "48MP Main, 12MP Ultra Wide, 12MP Telephoto",
-      "Battery": "Up to 23 hours video playback",
-      "Operating System": "iOS 17"
+  useEffect(() => {
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
+
+  const fetchProduct = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setProduct(data);
+      if (data.colors && data.colors.length > 0) {
+        setSelectedColor(data.colors[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      toast.error('Failed to load product');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const reviews = [
-    {
-      id: 1,
-      user: "John D.",
-      rating: 5,
-      comment: "Amazing phone! The camera quality is outstanding and the performance is incredibly smooth.",
-      date: "2024-01-15"
-    },
-    {
-      id: 2,
-      user: "Sarah M.",
-      rating: 4,
-      comment: "Great upgrade from my previous iPhone. Love the new design and features.",
-      date: "2024-01-10"
-    }
-  ];
+  const handleAddToCart = async () => {
+    if (!product) return;
+    await addToCart(product.id, quantity, selectedColor);
+  };
+
+  const handleBuyNow = async () => {
+    if (!product) return;
+    await addToCart(product.id, quantity, selectedColor);
+    navigate('/checkout');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header cartItemsCount={0} />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header cartItemsCount={0} />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">Product not found</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const displayImages = product.images && product.images.length > 0 
+    ? product.images 
+    : [product.image_url];
 
   return (
     <div className="min-h-screen bg-background">
-      <Header cartItemsCount={3} />
+      <Header cartItemsCount={0} />
       
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
@@ -82,24 +125,26 @@ const ProductDetails = () => {
           <div className="space-y-4">
             <div className="aspect-square rounded-lg overflow-hidden bg-card">
               <img
-                src={product.images[selectedImage]}
+                src={displayImages[selectedImage]}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="flex gap-2 overflow-x-auto">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 ${
-                    selectedImage === index ? "border-primary" : "border-border"
-                  }`}
-                >
-                  <img src={image} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
+            {displayImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto">
+                {displayImages.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 ${
+                      selectedImage === index ? "border-primary" : "border-border"
+                    }`}
+                  >
+                    <img src={image} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -122,7 +167,7 @@ const ProductDetails = () => {
                   ))}
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {product.rating} ({product.reviews} reviews)
+                  {product.rating} ({product.reviews_count} reviews)
                 </span>
               </div>
 
@@ -130,10 +175,10 @@ const ProductDetails = () => {
                 <span className="text-3xl font-bold text-brand-primary">
                   ${product.price}
                 </span>
-                {product.originalPrice > product.price && (
+                {product.original_price && product.original_price > product.price && (
                   <>
                     <span className="text-xl text-muted-foreground line-through">
-                      ${product.originalPrice}
+                      ${product.original_price}
                     </span>
                     <Badge className="bg-destructive text-destructive-foreground">
                       -{product.discount}% OFF
@@ -142,8 +187,32 @@ const ProductDetails = () => {
                 )}
               </div>
 
-              <p className="text-muted-foreground mb-6">{product.description}</p>
+              {product.description && (
+                <p className="text-muted-foreground mb-6">{product.description}</p>
+              )}
             </div>
+
+            {/* Color Selection */}
+            {product.colors && product.colors.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Color:</label>
+                <div className="flex gap-2">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={`px-4 py-2 border-2 rounded-md transition-colors ${
+                        selectedColor === color
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Quantity and Add to Cart */}
             <div className="space-y-4">
@@ -172,16 +241,31 @@ const ProductDetails = () => {
               </div>
 
               <div className="flex gap-4">
-                <Button className="flex-1" size="lg">
+                <Button 
+                  className="flex-1" 
+                  size="lg"
+                  disabled={!product.in_stock}
+                  onClick={handleAddToCart}
+                >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart
                 </Button>
-                <Button variant="outline" size="lg">
-                  <Heart className="h-5 w-5" />
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => toggleWishlist(product.id)}
+                >
+                  <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
                 </Button>
               </div>
 
-              <Button variant="secondary" className="w-full" size="lg">
+              <Button 
+                variant="secondary" 
+                className="w-full" 
+                size="lg"
+                disabled={!product.in_stock}
+                onClick={handleBuyNow}
+              >
                 Buy Now
               </Button>
             </div>
@@ -202,60 +286,6 @@ const ProductDetails = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Product Details Tabs */}
-        <div className="space-y-8">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Product Features</h3>
-              <ul className="space-y-2">
-                {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-2 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Specifications</h3>
-              <div className="space-y-3">
-                {Object.entries(product.specifications).map(([key, value]) => (
-                  <div key={key} className="flex justify-between items-start">
-                    <span className="font-medium text-muted-foreground">{key}:</span>
-                    <span className="text-right max-w-xs">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Customer Reviews</h3>
-              <div className="space-y-6">
-                {reviews.map((review) => (
-                  <div key={review.id}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-medium">{review.user}</span>
-                      <div className="flex">
-                        {[...Array(review.rating)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-                      <span className="text-sm text-muted-foreground">{review.date}</span>
-                    </div>
-                    <p className="text-muted-foreground">{review.comment}</p>
-                    <Separator className="mt-4" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </main>
 
