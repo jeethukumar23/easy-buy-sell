@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Zap, Gift } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function DealsSection() {
   return (
@@ -39,9 +40,11 @@ export function DealsSection() {
                   <div className="text-2xl font-bold">23:45:12</div>
                 </div>
               </div>
-              <Button size="lg" variant="secondary" className="bg-white text-gray-900 hover:bg-gray-100">
-                Shop Flash Sale
-              </Button>
+              <Link to="/products">
+                <Button size="lg" variant="secondary" className="bg-white text-gray-900 hover:bg-gray-100">
+                  Shop Flash Sale
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -57,9 +60,11 @@ export function DealsSection() {
                 <p className="text-white/90 mb-4 text-sm">
                   On orders over $50. Limited time only.
                 </p>
-                <Button size="sm" variant="secondary" className="bg-white text-gray-900 hover:bg-gray-100">
-                  Shop Now
-                </Button>
+                <Link to="/products">
+                  <Button size="sm" variant="secondary" className="bg-white text-gray-900 hover:bg-gray-100">
+                    Shop Now
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -72,9 +77,11 @@ export function DealsSection() {
                 <p className="text-white/90 mb-4 text-sm">
                   Welcome bonus for new customers.
                 </p>
-                <Button size="sm" variant="secondary" className="bg-white text-gray-900 hover:bg-gray-100">
-                  Get Discount
-                </Button>
+                <Link to="/products">
+                  <Button size="sm" variant="secondary" className="bg-white text-gray-900 hover:bg-gray-100">
+                    Get Discount
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
@@ -83,28 +90,30 @@ export function DealsSection() {
         {/* Deal Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
           {[
-            { title: "Fashion Sale", discount: "40% Off", image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200&h=200&fit=crop&auto=format" },
-            { title: "Home Essentials", discount: "25% Off", image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=200&h=200&fit=crop&auto=format" },
-            { title: "Beauty Products", discount: "30% Off", image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop&auto=format" },
-            { title: "Sports Gear", discount: "35% Off", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop&auto=format" }
+            { title: "Fashion Sale", discount: "40% Off", image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200&h=200&fit=crop&auto=format", category: "Fashion" },
+            { title: "Home Essentials", discount: "25% Off", image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=200&h=200&fit=crop&auto=format", category: "Home & Garden" },
+            { title: "Beauty Products", discount: "30% Off", image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop&auto=format", category: "Beauty" },
+            { title: "Sports Gear", discount: "35% Off", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop&auto=format", category: "Sports" }
           ].map((deal, index) => (
-            <Card key={index} className="group cursor-pointer hover:shadow-lg transition-all duration-300 overflow-hidden">
-              <CardContent className="p-0">
-                <div className="relative">
-                  <img 
-                    src={deal.image} 
-                    alt={deal.title}
-                    className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <p className="font-semibold text-sm">{deal.title}</p>
-                      <p className="text-lg font-bold">{deal.discount}</p>
+            <Link key={index} to={`/products?category=${encodeURIComponent(deal.category)}`}>
+              <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="relative">
+                    <img 
+                      src={deal.image} 
+                      alt={deal.title}
+                      className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <p className="font-semibold text-sm">{deal.title}</p>
+                        <p className="text-lg font-bold">{deal.discount}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>

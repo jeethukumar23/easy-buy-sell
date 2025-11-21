@@ -4,11 +4,14 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { CategorySection } from "@/components/home/CategorySection";
 import { ProductGrid } from "@/components/home/ProductGrid";
 import { DealsSection } from "@/components/home/DealsSection";
+import { useCart } from "@/hooks/useCart";
 
 const Index = () => {
+  const { cartCount } = useCart();
+
   return (
     <div className="min-h-screen bg-background">
-      <Header cartItemsCount={3} />
+      <Header cartItemsCount={cartCount} />
       <main>
         <HeroSection />
         <CategorySection />

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -6,60 +5,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCart } from "@/hooks/useCart";
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "iPhone 15 Pro",
-      price: 999,
-      originalPrice: 1099,
-      image: "/placeholder.svg",
-      quantity: 1,
-      inStock: true
-    },
-    {
-      id: 2,
-      name: "AirPods Pro",
-      price: 249,
-      originalPrice: 279,
-      image: "/placeholder.svg",
-      quantity: 2,
-      inStock: true
-    },
-    {
-      id: 3,
-      name: "MacBook Pro 14\"",
-      price: 1999,
-      originalPrice: 2199,
-      image: "/placeholder.svg",
-      quantity: 1,
-      inStock: true
-    }
-  ]);
+  const { cartItems, loading, updateQuantity, removeFromCart, cartCount } = useCart();
 
-  const updateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity === 0) {
-      removeItem(id);
-      return;
-    }
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
-
-  const removeItem = (id: number) => {
-    setCartItems(items => items.filter(item => item.id !== id));
-  };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const originalTotal = cartItems.reduce((sum, item) => sum + (item.originalPrice * item.quantity), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const originalTotal = cartItems.reduce((sum, item) => {
+    const originalPrice = item.product.original_price || item.product.price;
+    return sum + (originalPrice * item.quantity);
+  }, 0);
   const savings = originalTotal - subtotal;
   const shipping = subtotal > 500 ? 0 : 29;
   const tax = subtotal * 0.08; // 8% tax
   const total = subtotal + shipping + tax;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header cartItemsCount={0} />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading cart...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -84,7 +55,7 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header cartItemsCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} />
+      <Header cartItemsCount={cartCount} />
       
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
@@ -104,30 +75,36 @@ const Cart = () => {
                 <CardContent className="p-6">
                   <div className="flex gap-4">
                     <img
-                      src={item.image}
-                      alt={item.name}
+                      src={item.product.image_url}
+                      alt={item.product.name}
                       className="w-24 h-24 object-cover rounded-lg"
                     />
                     
                     <div className="flex-1">
-                      <Link to={`/product/${item.id}`}>
+                      <Link to={`/product/${item.product_id}`}>
                         <h3 className="font-semibold hover:text-primary transition-colors">
-                          {item.name}
+                          {item.product.name}
                         </h3>
                       </Link>
                       
+                      {item.selected_color && (
+                        <p className="text-sm text-muted-foreground">Color: {item.selected_color}</p>
+                      )}
+                      
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-lg font-bold text-brand-primary">
-                          ${item.price}
+                          ${item.product.price}
                         </span>
-                        {item.originalPrice > item.price && (
+                        {item.product.original_price && item.product.original_price > item.product.price && (
                           <span className="text-sm text-muted-foreground line-through">
-                            ${item.originalPrice}
+                            ${item.product.original_price}
                           </span>
                         )}
                       </div>
                       
-                      <p className="text-sm text-green-600 mt-1">In Stock</p>
+                      <p className="text-sm text-green-600 mt-1">
+                        {item.product.in_stock ? 'In Stock' : 'Out of Stock'}
+                      </p>
                       
                       <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center border rounded-md">
@@ -150,12 +127,12 @@ const Cart = () => {
                         
                         <div className="flex items-center gap-4">
                           <span className="font-semibold">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            ${(item.product.price * item.quantity).toFixed(2)}
                           </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => removeFromCart(item.id)}
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -177,7 +154,7 @@ const Cart = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
-                  <span>Subtotal ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
+                  <span>Subtotal ({cartCount} items)</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 
