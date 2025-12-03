@@ -20,6 +20,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        if (session) {
+          // Save session to localStorage
+          localStorage.setItem("supabase.auth.token", JSON.stringify(session));
+          // Redirect to home page
+          window.location.href = "/";
+        }
       }
     );
 
