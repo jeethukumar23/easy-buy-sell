@@ -1,10 +1,52 @@
+import { useState } from "react";
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubscribe = async () => {
+    if (!email || !email.includes("@")) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-subscription-email", {
+        body: { email },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Subscribed!",
+        description: "Thank you for subscribing. Check your email for confirmation.",
+      });
+      setEmail("");
+    } catch (error: any) {
+      console.error("Subscription error:", error);
+      toast({
+        title: "Subscription failed",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <footer className="bg-brand-secondary text-foreground">
       <div className="container mx-auto px-4 py-12">
@@ -29,7 +71,7 @@ export function Footer() {
                   <Twitter className="h-4 w-4" />
                 </Button>
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://instagram.com/_mr_jeethu" target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Instagram className="h-4 w-4" />
                 </Button>
@@ -76,23 +118,33 @@ export function Footer() {
                 <Input 
                   placeholder="Enter your email" 
                   className="bg-surface-base border-border"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
                 />
-                <Button variant="default" size="sm">Subscribe</Button>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={handleSubscribe}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "..." : "Subscribe"}
+                </Button>
               </div>
             </div>
             
             <div className="mt-6 space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                <span>+1 (555) 123-4567</span>
+                <span>+91 9949888573</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <span>support@easybuysell.com</span>
+                <span>jeethukumar573@gmail.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                <span>123 Commerce St, City, State 12345</span>
+                <span>India, Andhra Pradesh, Tenali 522201</span>
               </div>
             </div>
           </div>
