@@ -5,6 +5,7 @@ import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AuthCallback from "./pages/AuthCallback";
 import Checkout from "./pages/Checkout";
 import OrderHistory from "./pages/OrderHistory";
 import HelpCenter from "./pages/HelpCenter";
@@ -26,6 +27,7 @@ const App = () => (
     <Route path="/cart" element={<Cart />} />
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
+    <Route path="/auth/callback" element={<AuthCallback />} />
     <Route path="/checkout" element={<Checkout />} />
     <Route path="/order-history" element={<OrderHistory />} />
     <Route path="/help-center" element={<HelpCenter />} />
