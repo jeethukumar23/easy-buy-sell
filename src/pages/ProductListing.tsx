@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Star, Heart, ShoppingCart } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useWishlist } from "@/hooks/useWishlist";
 import { toast } from "sonner";
 
@@ -21,25 +22,20 @@ const categories = [
   "Sports"
 ];
 
-const categoryMap = {
-  Electronics: "smartphones",
-  Fashion: "tops",
-  "Home & Garden": "home-decoration",
-  Sports: "sunglasses",
-  Beauty: "fragrances",
-  Books: "books",
-};
-
 interface Product {
-  id: number;
-  title: string;
-  description: string;
+  id: string;
+  name: string;
+  description: string | null;
   price: number;
+  original_price: number | null;
   category: string;
-  thumbnail: string;
-  images: string[];
+  subcategory: string | null;
+  brand: string | null;
+  image_url: string;
+  images: string[] | null;
+  colors: string[] | null;
   rating: number;
-  reviews_count?: number;
+  reviews_count: number;
   stock: number;
   in_stock: boolean;
   discount: number;
@@ -60,6 +56,7 @@ const ProductListing = () => {
     
     if (searchParam) {
       setSearchTerm(searchParam);
+      // Reset category to "All Categories" when searching
       setSelectedCategory("All Categories");
     } else if (categoryParam) {
       setSelectedCategory(categoryParam);
@@ -70,55 +67,35 @@ const ProductListing = () => {
     fetchProducts();
   }, [selectedCategory, searchTerm, sortBy]);
 
-  const fetchProducts = async (category = selectedCategory) => {
+  const fetchProducts = async () => {
     setLoading(true);
     try {
-      let url = "https://dummyjson.com/products";
+      let query = supabase
+        .from('products')
+        .select('*');
 
-      if (category && categoryMap[category]) {
-        url = `https://dummyjson.com/products/category/${categoryMap[category]}`;
+      if (selectedCategory !== "All Categories") {
+        query = query.eq('category', selectedCategory);
       }
 
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      let allProducts: Product[] = (data.products || data).map((product: any) => ({
-        id: product.id,
-        title: product.title,
-        description: product.description,
-        price: product.price,
-        category: product.category,
-        thumbnail: product.thumbnail,
-        images: product.images || [product.thumbnail],
-        rating: product.rating || 0,
-        reviews_count: 0,
-        stock: product.stock || 50,
-        in_stock: (product.stock || 50) > 0,
-        discount: 0
-      }));
-
-      // Filter by search term
       if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        allProducts = allProducts.filter(p =>
-          p.title.toLowerCase().includes(searchLower) ||
-          p.description.toLowerCase().includes(searchLower) ||
-          p.category.toLowerCase().includes(searchLower)
-        );
+        query = query.or(`name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
       }
 
-      // Sort products
       if (sortBy === 'price-low') {
-        allProducts.sort((a, b) => a.price - b.price);
+        query = query.order('price', { ascending: true });
       } else if (sortBy === 'price-high') {
-        allProducts.sort((a, b) => b.price - a.price);
+        query = query.order('price', { ascending: false });
       } else if (sortBy === 'rating') {
-        allProducts.sort((a, b) => b.rating - a.rating);
+        query = query.order('rating', { ascending: false });
       } else if (sortBy === 'newest') {
-        allProducts.reverse();
+        query = query.order('created_at', { ascending: false });
       }
 
-      setProducts(allProducts);
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setProducts(data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to load products');
@@ -189,8 +166,8 @@ const ProductListing = () => {
               <CardContent className="p-0">
                 <div className="relative">
                   <img
-                    src={product.thumbnail}
-                    alt={product.title}
+                    src={product.image_url}
+                    alt={product.name}
                     className="w-full h-48 object-cover rounded-t-lg"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -222,7 +199,7 @@ const ProductListing = () => {
                 <div className="p-4">
                   <Link to={`/product/${product.id}`}>
                     <h3 className="font-semibold text-sm mb-2 hover:text-primary transition-colors">
-                      {product.title}
+                      {product.name}
                     </h3>
                   </Link>
                   
@@ -248,6 +225,11 @@ const ProductListing = () => {
                     <span className="text-lg font-bold text-brand-primary">
                       ${product.price}
                     </span>
+                    {product.original_price && product.original_price > product.price && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        ${product.original_price}
+                      </span>
+                    )}
                   </div>
                   
                   <Button 

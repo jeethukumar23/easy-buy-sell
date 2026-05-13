@@ -40,7 +40,7 @@ export function DealsSection() {
                   <div className="text-2xl font-bold">23:45:12</div>
                 </div>
               </div>
-              <Link to="/products?category=Electronics">
+              <Link to="/products">
                 <Button size="lg" variant="secondary" className="bg-white text-gray-900 hover:bg-gray-100">
                   Shop Flash Sale
                 </Button>

@@ -7,23 +7,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { toast } from "sonner";
 
 interface Product {
-  id: number;
-  title: string;
+  id: string;
+  name: string;
   price: number;
-  description: string;
+  original_price: number | null;
+  description: string | null;
   category: string;
-  thumbnail: string;
-  images: string[];
+  image_url: string;
+  images: string[] | null;
   rating: number;
-  reviews_count?: number;
+  reviews_count: number;
   in_stock: boolean;
   stock: number;
   discount: number;
+  colors: string[] | null;
 }
 
 const ProductDetails = () => {
@@ -45,27 +48,16 @@ const ProductDetails = () => {
 
   const fetchProduct = async () => {
     try {
-      const response = await fetch(`https://dummyjson.com/products/${id}`);
-      const data = await response.json();
-      
-      if (data.id) {
-        const product: Product = {
-          id: data.id,
-          title: data.title,
-          description: data.description,
-          price: data.price,
-          category: data.category,
-          thumbnail: data.thumbnail,
-          images: data.images || [data.thumbnail],
-          rating: data.rating || 0,
-          reviews_count: 0,
-          stock: data.stock || 50,
-          in_stock: (data.stock || 50) > 0,
-          discount: 0
-        };
-        setProduct(product);
-      } else {
-        throw new Error('Product not found');
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setProduct(data);
+      if (data.colors && data.colors.length > 0) {
+        setSelectedColor(data.colors[0]);
       }
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -112,7 +104,7 @@ const ProductDetails = () => {
 
   const displayImages = product.images && product.images.length > 0 
     ? product.images 
-    : [product.thumbnail];
+    : [product.image_url];
 
   return (
     <div className="min-h-screen bg-background">
@@ -125,7 +117,7 @@ const ProductDetails = () => {
           <span className="mx-2">/</span>
           <Link to="/products" className="hover:text-primary">Products</Link>
           <span className="mx-2">/</span>
-          <span>{product.title}</span>
+          <span>{product.name}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
@@ -134,7 +126,7 @@ const ProductDetails = () => {
             <div className="aspect-square rounded-lg overflow-hidden bg-card">
               <img
                 src={displayImages[selectedImage]}
-                alt={product.title}
+                alt={product.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -171,7 +163,7 @@ const ProductDetails = () => {
           <div className="space-y-6">
             <div>
               <Badge variant="secondary" className="mb-2">{product.category}</Badge>
-              <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
+              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
               
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex">
@@ -187,7 +179,7 @@ const ProductDetails = () => {
                   ))}
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {product.rating} ({product.reviews_count || 0} reviews)
+                  {product.rating} ({product.reviews_count} reviews)
                 </span>
               </div>
 
@@ -195,12 +187,44 @@ const ProductDetails = () => {
                 <span className="text-3xl font-bold text-brand-primary">
                   ${product.price}
                 </span>
+                {product.original_price && product.original_price > product.price && (
+                  <>
+                    <span className="text-xl text-muted-foreground line-through">
+                      ${product.original_price}
+                    </span>
+                    <Badge className="bg-destructive text-destructive-foreground">
+                      -{product.discount}% OFF
+                    </Badge>
+                  </>
+                )}
               </div>
 
               {product.description && (
                 <p className="text-muted-foreground mb-6">{product.description}</p>
               )}
             </div>
+
+            {/* Color Selection */}
+            {product.colors && product.colors.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Color:</label>
+                <div className="flex gap-2">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={`px-4 py-2 border-2 rounded-md transition-colors ${
+                        selectedColor === color
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Quantity and Add to Cart */}
             <div className="space-y-4">

@@ -4,17 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Heart, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 
 interface Product {
-  id: number;
-  title: string;
+  id: string;
+  name: string;
   price: number;
+  original_price: number | null;
   rating: number;
-  reviews_count?: number;
-  thumbnail: string;
+  reviews_count: number;
+  image_url: string;
   discount: number;
   category: string;
   in_stock: boolean;
@@ -32,25 +34,14 @@ export function ProductGrid() {
 
   const fetchFeaturedProducts = async () => {
     try {
-      const response = await fetch("https://dummyjson.com/products?limit=6");
-      const data = await response.json();
-      
-      const products: Product[] = data.products
-        .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
-        .slice(0, 6)
-        .map((product: any) => ({
-          id: product.id,
-          title: product.title,
-          price: product.price,
-          rating: product.rating || 0,
-          reviews_count: 0,
-          thumbnail: product.thumbnail,
-          discount: 0,
-          category: product.category,
-          in_stock: (product.stock || 50) > 0
-        }));
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .limit(6)
+        .order('rating', { ascending: false });
 
-      setProducts(products);
+      if (error) throw error;
+      setProducts(data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to load products');
@@ -86,8 +77,8 @@ export function ProductGrid() {
                 <Link to={`/product/${product.id}`}>
                   <div className="relative">
                     <img 
-                      src={product.thumbnail} 
-                      alt={product.title}
+                      src={product.image_url} 
+                      alt={product.name}
                       className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -124,7 +115,7 @@ export function ProductGrid() {
                   <p className="text-sm text-muted-foreground mb-1">{product.category}</p>
                   <Link to={`/product/${product.id}`}>
                     <h3 className="font-semibold mb-2 line-clamp-2 hover:text-primary transition-colors">
-                      {product.title}
+                      {product.name}
                     </h3>
                   </Link>
                   
@@ -142,13 +133,18 @@ export function ProductGrid() {
                       ))}
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      ({product.reviews_count || 0})
+                      ({product.reviews_count})
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xl font-bold">${product.price}</span>
+                      {product.original_price && product.original_price > product.price && (
+                        <span className="text-sm text-muted-foreground line-through">
+                          ${product.original_price}
+                        </span>
+                      )}
                     </div>
                     
                     <Button 
